@@ -305,16 +305,16 @@ export default class TmxAssembler extends Assembler {
         let tiledNode = null, curTexIdx = -1, matIdx;
         let colNodesCount = 0, checkColRange = true;
 
-        if (rowMoveDir == -1) {
-            row = rightTop.row;
-            rows = leftDown.row;
+        if (rowMoveDir == -1) { // 坐标是从左下到右上的
+            row = rightTop.row; //右上的行号
+            rows = leftDown.row; // 左下的行号
         } else {
-            row = leftDown.row;
-            rows = rightTop.row;
+            row = leftDown.row; // 左下的行号
+            rows = rightTop.row; // 右上的行号
         }
 
         // traverse row
-        for (; (rows - row) * rowMoveDir >= 0; row += rowMoveDir) {
+        for (; (rows - row) * rowMoveDir >= 0; row += rowMoveDir) { // 减的结果再配合方向
             rowData = vertices[row];
             colNodesCount = _comp._getNodesCountByRow(row);
             checkColRange = (colNodesCount == 0 && rowData != undefined);
