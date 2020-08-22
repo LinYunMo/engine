@@ -29,6 +29,7 @@ require('./CCTiledMapAsset');
 require('./CCTiledLayer');
 require('./CCTiledTile');
 require('./CCTiledObjectGroup');
+require('../core/assets/CCSpriteFrame');
 
 /**
  * !#en The orientation of tiled map.
@@ -349,6 +350,20 @@ let TiledMap = cc.Class({
                 }
             },
             type: cc.TiledMapAsset
+        },
+
+        _spriteFrames: {
+            default: [],
+            type: cc.SpriteFrame
+        },
+        spriteFrames : {
+            get () {
+                return this._spriteFrames;
+            },
+            set (value) {
+                this._spriteFrames = value;
+            },
+            type: [cc.SpriteFrame]
         }
     },
 
@@ -549,19 +564,23 @@ let TiledMap = cc.Class({
     _applyFile () {
         let file = this._tmxFile;
         if (file) {
-            let texValues = file.textures;
+            // let texValues = file.textures;
             let texKeys = file.textureNames;
             let texSizes = file.textureSizes;
+            let spfValues = file.spriteFrames;
             let textures = {};
             let textureSizes = {};
-            for (let i = 0; i < texValues.length; ++i) {
+            for (let i = 0; i < spfValues.length; ++i) {
                 let texName = texKeys[i];
-                textures[texName] = texValues[i];
+                // textures[texName] = texValues[i];
                 textureSizes[texName] = texSizes[i];
+                // preload 时不要重复赋值
+                this._spriteFrames[i] = spfValues[i];
+                textures[texName] = this._spriteFrames[i].getTexture();
             }
 
             let imageLayerTextures = {};
-            texValues = file.imageLayerTextures;
+            let texValues = file.imageLayerTextures;
             texKeys = file.imageLayerTextureNames;
             for (let i = 0; i < texValues.length; ++i) {
                 imageLayerTextures[texKeys[i]] = texValues[i];
@@ -665,7 +684,7 @@ let TiledMap = cc.Class({
         for (let i = 0, l = tilesets.length; i < l; ++i) {
             let tilesetInfo = tilesets[i];
             if (!tilesetInfo) continue;
-            cc.TiledMap.fillTextureGrids(tilesetInfo, texGrids, i);
+            cc.TiledMap.fillTextureGrids(tilesetInfo, texGrids, i, this._spriteFrames[i]);
         }
         this._fillAniGrids(texGrids, animations);
 
@@ -852,8 +871,9 @@ cc.TiledMap.loadAllTextures = function (textures, loadedCallback) {
     }
 };
 
-cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId) {
+cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId, spf) {
     let tex = tileset.sourceImage;
+    tex = spf.getTexture(); // 需要裁剪后的大小？ sprite是怎么做的？
 
     if (!tileset.imageSize.width || !tileset.imageSize.height) {
         tileset.imageSize.width = tex.width;
@@ -900,7 +920,7 @@ cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId) {
             t: 0, l: 0, r: 0, b: 0,
             gid: gid,
         };
-        tileset.rectForGID(gid, grid);
+        tileset.rectForGID(gid, grid, imageW, imageH);
         grid.x += texelCorrect;
         grid.y += texelCorrect;
         grid.width -= texelCorrect*2;
