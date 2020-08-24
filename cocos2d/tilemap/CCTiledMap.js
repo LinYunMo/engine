@@ -346,7 +346,7 @@ let TiledMap = cc.Class({
             set (value, force) {
                 if (this._tmxFile !== value || (CC_EDITOR && force)) {
                     this._tmxFile = value;
-                    this._applyFile();
+                    this._applyFile(true);
                 }
             },
             type: cc.TiledMapAsset
@@ -362,6 +362,7 @@ let TiledMap = cc.Class({
             },
             set (value) {
                 this._spriteFrames = value;
+                _applyFile(false);
             },
             type: [cc.SpriteFrame]
         }
@@ -549,7 +550,7 @@ let TiledMap = cc.Class({
     __preload () {
         if (this._tmxFile) {
             // refresh layer entities
-            this._applyFile();
+            this._applyFile(false);
         }
     },
 
@@ -561,7 +562,7 @@ let TiledMap = cc.Class({
         this.node.off(cc.Node.EventType.ANCHOR_CHANGED, this._syncAnchorPoint, this);
     },
 
-    _applyFile () {
+    _applyFile (fromFile) {
         let file = this._tmxFile;
         if (file) {
             // let texValues = file.textures;
@@ -575,7 +576,9 @@ let TiledMap = cc.Class({
                 // textures[texName] = texValues[i];
                 textureSizes[texName] = texSizes[i];
                 // preload 时不要重复赋值
-                this._spriteFrames[i] = spfValues[i];
+                if (fromFile) {
+                    this._spriteFrames[i] = spfValues[i];
+                }
                 textures[texName] = this._spriteFrames[i].getTexture();
             }
 
