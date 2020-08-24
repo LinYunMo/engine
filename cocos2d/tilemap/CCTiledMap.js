@@ -929,11 +929,20 @@ cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId, spf) {
         // grid.l = (grid.x) / imageW;
         // grid.r = (grid.x + grid.width) / imageW;
         // grid.b = (grid.y + grid.height) / imageH;
+
         // spf.rotated = false; // 强制要求 
-        grid.t = spf.uv[5];
-        grid.b = spf.uv[1];
-        grid.l = spf.uv[0];
-        grid.r = spf.uv[2];
+        if (spf._rotated) { // 有问题，缺点信息，这只给了范围（4值，缺点信息）
+            grid.t = spf.uv[4];
+            grid.b = spf.uv[0];
+            grid.l = spf.uv[1];
+            grid.r = spf.uv[3];
+        } else {
+            // uv取值太绝对，有黑边 //做个像素偏移可以解决
+            grid.t = spf.uv[5];
+            grid.b = spf.uv[1];
+            grid.l = spf.uv[0];
+            grid.r = spf.uv[2];
+        }
         texGrids[gid] = grid;
     }
 };
