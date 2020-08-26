@@ -227,22 +227,22 @@ export default class TmxAssembler extends Assembler {
             switch (comp._renderOrder) {
                 // left top to right down, col add, row sub, 
                 case RenderOrder.RightDown:
-                    if (comp.useInstance) this.traverseGridsWithInstanse(leftDown, rightTop, -1, 1);
+                    if (comp.useInstance && CC_BUILD ) this.traverseGridsWithInstanse(leftDown, rightTop, -1, 1);
                     else this.traverseGrids(leftDown, rightTop, -1, 1);
                     break;
                 // right top to left down, col sub, row sub
                 case RenderOrder.LeftDown:
-                    if (comp.useInstance) this.traverseGridsWithInstanse(leftDown, rightTop, -1, -1);
+                    if (comp.useInstance && CC_BUILD) this.traverseGridsWithInstanse(leftDown, rightTop, -1, -1);
                     else this.traverseGrids(leftDown, rightTop, -1, -1);
                     break;
                 // left down to right up, col add, row add
                 case RenderOrder.RightUp:
-                    if (comp.useInstance) this.traverseGridsWithInstanse(leftDown, rightTop, 1, 1);
+                    if (comp.useInstance && CC_BUILD) this.traverseGridsWithInstanse(leftDown, rightTop, 1, 1);
                     else this.traverseGrids(leftDown, rightTop, 1, 1);
                     break;
                 // right down to left up, col sub, row add
                 case RenderOrder.LeftUp:
-                    if (comp.useInstance) this.traverseGridsWithInstanse(leftDown, rightTop, 1, -1);
+                    if (comp.useInstance && CC_BUILD) this.traverseGridsWithInstanse(leftDown, rightTop, 1, -1);
                     else this.traverseGrids(leftDown, rightTop, 1, -1);
                     break;
             }
@@ -271,7 +271,7 @@ export default class TmxAssembler extends Assembler {
                     renderer.worldMatDirty--;
                     renderer._flush();
                 }
-                if (renderData.ia._count > 0 && !comp.useInstance) {
+                if (renderData.ia._count > 0 && !(comp.useInstance && CC_BUILD)) {
                     renderer.material = renderData.material;
                     renderer.node = layerNode;
                     renderer._flushIA(renderData.ia);
@@ -279,7 +279,7 @@ export default class TmxAssembler extends Assembler {
             }
         }
 
-        if (comp.useInstance) {
+        if (comp.useInstance && CC_BUILD) {
             let instanceBuffer = getBuffer();
             let buffer = getVBuffer();
             buffer.set(this._instanceArray, instanceBuffer.instanceOffset * this.floatsPerVert);
