@@ -575,7 +575,6 @@ let TiledMap = cc.Class({
                 let texName = texKeys[i];
                 // textures[texName] = texValues[i];
                 textureSizes[texName] = texSizes[i];
-                // preload 时不要重复赋值
                 if (fromFile) {
                     this._spriteFrames[i] = spfValues[i];
                 }
@@ -876,7 +875,7 @@ cc.TiledMap.loadAllTextures = function (textures, loadedCallback) {
 
 cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId, spf) {
     let tex = tileset.sourceImage;
-    tex = spf.getTexture(); // 需要裁剪后的大小？ sprite是怎么做的？
+    tex = spf.getTexture();
 
     if (!tileset.imageSize.width || !tileset.imageSize.height) {
         tileset.imageSize.width = tex.width;
@@ -928,12 +927,8 @@ cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId, spf) {
         grid.y += texelCorrect;
         grid.width -= texelCorrect*2;
         grid.height -= texelCorrect*2;
-        // grid.t = (grid.y) / imageH;
-        // grid.l = (grid.x) / imageW;
-        // grid.r = (grid.x + grid.width) / imageW;
-        // grid.b = (grid.y + grid.height) / imageH;
 
-        // spf.rotated = false; // 强制要求 
+        // spf.rotated = false;
         if (spf._rotated) { // 有问题，缺点信息，这只给了范围（4值，缺点信息）
             grid.t = spf.uv[4];
             grid.b = spf.uv[0];
