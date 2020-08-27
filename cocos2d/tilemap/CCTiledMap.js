@@ -928,18 +928,17 @@ cc.TiledMap.fillTextureGrids = function (tileset, texGrids, texId, spf) {
         grid.width -= texelCorrect*2;
         grid.height -= texelCorrect*2;
 
-        // spf.rotated = false;
-        if (spf._rotated) { // 有问题，缺点信息，这只给了范围（4值，缺点信息）
-            grid.t = spf.uv[4];
-            grid.b = spf.uv[0];
-            grid.l = spf.uv[1];
-            grid.r = spf.uv[3];
+        if (spf._rotated) {
+            // grid.t = spf.uv[4];
+            // grid.b = spf.uv[0];
+            // grid.l = spf.uv[1];
+            // grid.r = spf.uv[3];
+            console.error('Atlas do not rotate!');
         } else {
-            // uv取值太绝对，有黑边 //做个像素偏移可以解决
-            grid.t = spf.uv[5];
-            grid.b = spf.uv[1];
-            grid.l = spf.uv[0];
-            grid.r = spf.uv[2];
+            grid.t = spf.uv[5] + (grid.y) / imageH;
+            grid.b = spf.uv[1] - (grid.y) / imageH;
+            grid.l = spf.uv[0] + (grid.x) / imageW;
+            grid.r = spf.uv[2] - (grid.x) / imageW;
         }
         texGrids[gid] = grid;
     }
