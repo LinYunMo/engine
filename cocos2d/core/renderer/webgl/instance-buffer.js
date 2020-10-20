@@ -14,8 +14,8 @@ let instanceTexture = null;
 let instanceDataTexOptions = null;
 
 let SUPPORT_FLOAT_TEXTURE = false;
-let size = 64; //Texture Size, Must be an integer multiple of 4
-let FixedRequestCount = size * size / 4;
+let size = 60; //Texture Size, Must be an integer multiple of 4 //这个必须是6的倍数
+let FixedRequestCount = size * size / 6; // 6个一组
 
 let fixLength = 0;
 let freeIndexBuffer = [];
@@ -27,7 +27,7 @@ function checkFloatSupport () {
 export function initFreeIndexBuffer () {
     if (fixLength === 0) {
         checkFloatSupport();
-        freeIndexBuffer.length = fixLength = size * size / 4;
+        freeIndexBuffer.length = fixLength = size * size / 6; //6个一组 
         for(let i = 0; i < freeIndexBuffer.length; i++ ) {
             freeIndexBuffer[i] = i;
         }
@@ -39,7 +39,7 @@ export function initFreeIndexBuffer () {
 
 function resizeDataBuffer () {
     size *= 2;
-    freeIndexBuffer.length = size * size / 4 - fixLength;
+    freeIndexBuffer.length = size * size / 6 - fixLength;
     for(let i = 0; i < freeIndexBuffer.length; i++ ) {
         freeIndexBuffer[i] = i + fixLength;
     }
@@ -76,6 +76,8 @@ export const vfmtDataBuffer = new cc.gfx.VertexFormat([
     { name: 'a_pos_translate', type: cc.gfx.ATTR_TYPE_FLOAT32, num: 2 },
     { name: 'a_uv_rotate', type: cc.gfx.ATTR_TYPE_FLOAT32, num: 1 },
     { name: 'a_texture_id', type: cc.gfx.ATTR_TYPE_FLOAT32, num: 1 },
+    { name: 'a_test', type: cc.gfx.ATTR_TYPE_FLOAT32, num: 4 },
+    { name: 'a_test_a', type: cc.gfx.ATTR_TYPE_FLOAT32, num: 4 },
 ])
 
 export function initBuffer () {
