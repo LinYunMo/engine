@@ -43,6 +43,7 @@ type EventType = string;
  */
 export interface IEventified {
     /**
+     * @hidden
      * @zh 检查指定事件是否已注册回调。
      * @en Checks whether there is correspond event listener registered on the given event.
      * @param type - Event type.
@@ -52,6 +53,7 @@ export interface IEventified {
     hasEventListener (type: string, callback?: Function, target?: object): boolean;
 
     /**
+     * @hidden
      * @en
      * Register an callback of a specific event type on the EventTarget.
      * This type of event should be triggered via `emit`.
@@ -72,6 +74,7 @@ export interface IEventified {
     on<TFunction extends Function> (type: EventType, callback: TFunction, thisArg?: any, once?: boolean): typeof callback;
 
     /**
+     * @hidden
      * @en
      * Register an callback of a specific event type on the EventTarget,
      * the callback will remove itself after the first time it is triggered.
@@ -91,6 +94,7 @@ export interface IEventified {
     once<TFunction extends Function> (type: EventType, callback: TFunction, thisArg?: any): typeof callback;
 
     /**
+     * @hidden
      * @en
      * Removes the listeners previously registered with the same type, callback, target and or useCapture,
      * if only type is passed as parameter, all listeners registered with that type will be removed.
@@ -114,6 +118,7 @@ export interface IEventified {
     off<TFunction extends Function> (type: EventType, callback?: TFunction, thisArg?: any): void;
 
     /**
+     * @hidden
      * @en Removes all callbacks previously registered with the same target (passed as parameter).
      * This is not for removing all listeners in the current event target,
      * and this is not for removing all listeners the target parameter have registered.
@@ -126,6 +131,7 @@ export interface IEventified {
     targetOff (typeOrTarget: string | object): void;
 
     /**
+     * @hidden
      * @zh 移除在特定事件类型中注册的所有回调或在某个目标中注册的所有回调。
      * @en Removes all callbacks registered in a certain event type or all callbacks registered with a certain target
      * @param typeOrTarget - The event type or target with which the listeners will be removed
@@ -133,6 +139,7 @@ export interface IEventified {
     removeAll (typeOrTarget: string | object): void;
 
     /**
+     * @hidden
      * @zh 派发一个指定事件，并传递需要的参数
      * @en Trigger an event directly with the event name and necessary arguments.
      * @param type - event type
@@ -166,13 +173,13 @@ export function Eventify<TBase> (base: Constructor<TBase>): Constructor<TBase & 
         public targetOff (typeOrTarget: string | object) {
             this.removeAll(typeOrTarget);
         }
-    };
+    }
 
     // Mixin with `CallbacksInvokers`'s prototype
     const callbacksInvokerPrototype = CallbacksInvoker.prototype;
-    const propertyKeys: (string | symbol)[] =
-        (Object.getOwnPropertyNames(callbacksInvokerPrototype) as (string | symbol)[]).concat(
-            Object.getOwnPropertySymbols(callbacksInvokerPrototype));
+    const propertyKeys: (string | symbol)[] =        (Object.getOwnPropertyNames(callbacksInvokerPrototype) as (string | symbol)[]).concat(
+        Object.getOwnPropertySymbols(callbacksInvokerPrototype),
+    );
     for (let iPropertyKey = 0; iPropertyKey < propertyKeys.length; ++iPropertyKey) {
         const propertyKey = propertyKeys[iPropertyKey];
         if (!(propertyKey in Eventified.prototype)) {

@@ -27,7 +27,6 @@
 /**
  * @packageDocumentation
  * @module component/audio
- * @hidden
  */
 
 import { getError, log } from '../core/platform/debug';
