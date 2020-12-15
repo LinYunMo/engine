@@ -30,7 +30,7 @@
 import { UIStaticBatch } from '../../../ui';
 import { Material } from '../../assets/material';
 import { Canvas, UIComponent, UIRenderable } from '../../components/ui-base';
-import { Texture, Device, Attribute, Sampler, DescriptorSetInfo } from '../../gfx';
+import { Texture, Device, Attribute, Sampler, DescriptorSetInfo, DepthStencilState, BlendTarget } from '../../gfx';
 import { Pool, RecyclePool } from '../../memop';
 import { CachedArray } from '../../memop/cached-array';
 import { Camera } from '../scene/camera';
@@ -45,7 +45,7 @@ import { UIMaterial } from './ui-material';
 import * as UIVertexFormat from './ui-vertex-format';
 import { legacyCC } from '../../global-exports';
 import { DescriptorSetHandle, DSPool, SubModelPool, SubModelView } from '../core/memory-pools';
-import { ModelLocalBindings } from '../../pipeline/define';
+import { ModelLocalBindings, UBOLocal } from '../../pipeline/define';
 import { EffectAsset, RenderTexture, SpriteFrame } from '../../assets';
 import { programLib } from '../core/program-lib';
 import { TextureBase } from '../../assets/texture-base';
@@ -118,8 +118,8 @@ export class UI {
     private _currTransform: Node | null = null;
     private _currTextureHash = 0;
     private _currSamplerHash = 0;
-    private _currMaterialHash = 0;
-    private _currMaterialUniformHash = 0;
+    private _currBlendTargetHash = 0;
+    private _currDepthStencilStateStage: any|null = null;
     private _parentOpacity = 1;
     // DescriptorSet Cache Map
     private _descriptorSetCacheMap = new Map<number, Map<number, DescriptorSetHandle>>();
@@ -336,6 +336,14 @@ export class UI {
                     for (let j = 0; j < subModels.length; j++) {
                         subModels[j].priority = batchPriority++;
                     }
+                } else if (batch.useLocalData) {
+                    this._initDescriptorSet(batch); // when free
+                    const descriptorSet = DSPool.get(batch.hDescriptorSet);
+                    const binding = ModelLocalBindings.SAMPLER_SPRITE;
+                    descriptorSet.bindTexture(binding, batch.texture!);
+                    descriptorSet.bindSampler(binding, batch.sampler!);
+                    descriptorSet.bindBuffer(UBOLocal.BINDING, batch.localBuffer);
+                    descriptorSet.update();
                 } else {
                     const descriptorSetTextureMap = this._descriptorSetCacheMap.get(batch.textureHash);
                     if (descriptorSetTextureMap && descriptorSetTextureMap.has(batch.samplerHash)) {
@@ -360,9 +368,10 @@ export class UI {
                 if (batch.camera) {
                     const visibility = batch.camera.visibility;
                     batch.visFlags = visibility;
-                    if (this._canvasMaterials.get(visibility)!.get(batch.material!.hash) == null) {
-                        this._canvasMaterials.get(visibility)!.set(batch.material!.hash, 1);
-                    }
+                    // 这儿缺个功能，canvas 的 renderTexture 功能
+                    // if (this._canvasMaterials.get(visibility)!.get(batch.material!.hash) == null) {
+                    //    this._canvasMaterials.get(visibility)!.set(batch.material!.hash, 1);
+                    // }
                 }
 
                 this._scene.addBatch(batch);
@@ -411,8 +420,6 @@ export class UI {
         this._currTransform = null;
         this._meshBufferUseCount.clear();
         this._batches.clear();
-        this._currMaterialHash = 0;
-        this._currMaterialUniformHash = 0;
         StencilManager.sharedManager!.reset();
     }
 
@@ -447,13 +454,13 @@ export class UI {
         }
 
         const mat = renderComp.getRenderMaterial(0);
-        const matHash = mat!.hash;
-        const matUniformHash = renderComp.updateMaterialUniformHash(mat!);
+        renderComp.stencilStage = StencilManager.sharedManager!.stage;
 
-        // use material judgment merge is increasingly impossible, change to hash is more possible
-        if (this._currMaterialHash !== matHash || this._currMaterialUniformHash !== matUniformHash
-            || this._currTextureHash !== textureHash || this._currSamplerHash !== samplerHash || this._currTransform !== transform
-        ) {
+        const blendTargetHash = renderComp.blendHash;
+        const depthStencilStateStage = renderComp.stencilStage;
+
+        if (this._currMaterial !== mat || this._currBlendTargetHash !== blendTargetHash || this._currDepthStencilStateStage !== depthStencilStateStage
+            || this._currTextureHash !== textureHash || this._currSamplerHash !== samplerHash || this._currTransform !== transform) {
             this.autoMergeBatches(this._currComponent!);
             this._currComponent = renderComp;
             this._currTransform = transform;
@@ -462,8 +469,8 @@ export class UI {
             this._currSampler = samp;
             this._currTextureHash = textureHash;
             this._currSamplerHash = samplerHash;
-            this._currMaterialHash = renderComp.getRenderMaterial(0)!.hash;
-            this._currMaterialUniformHash = renderComp.materialUniformHash;
+            this._currBlendTargetHash = blendTargetHash;
+            this._currDepthStencilStateStage = depthStencilStateStage;
         }
 
         if (assembler) {
@@ -491,35 +498,33 @@ export class UI {
             this.autoMergeBatches(this._currComponent!);
         }
 
+        let depthStencil;
         if (mat) {
-            let rebuild = false;
-            if (comp instanceof UIRenderable) {
-                rebuild = StencilManager.sharedManager!.handleMaterial(mat, comp);
-            } else {
-                rebuild = StencilManager.sharedManager!.handleMaterial(mat);
+            if (comp instanceof UIComponent) {
+                // 没处理 单独的 graphics
+                // 针对 mask 的 model 和 graphics，这里是不需要全局子节点控制的，所以不用更新
+                comp.stencilStage = StencilManager.sharedManager!.stage;
             }
-            if (rebuild) {
-                const state = StencilManager.sharedManager!.pattern;
-                StencilManager.sharedManager!.applyStencil(mat, state);
-            }
-            if (rebuild && model) {
-                for (let i = 0; i < model.subModels.length; i++) {
-                    model.setSubModelMaterial(i, mat);
-                }
-            }
+            depthStencil = StencilManager.sharedManager!.getStencilStage(comp.stencilStage);
         }
 
         const uiCanvas = this._currCanvas;
         const curDrawBatch = this._drawBatchPool.alloc();
+        const stamp = legacyCC.director.getTotalFrames();
+        if (model) {
+            model.updateTransform(stamp);
+            model.updateUBOs(stamp);
+        }
         const subModel = model!.subModels[0];
         if (subModel) {
             curDrawBatch.camera = uiCanvas && uiCanvas.camera;
             curDrawBatch.model = model;
             curDrawBatch.bufferBatch = null;
-            curDrawBatch.material = mat;
             curDrawBatch.texture = null;
             curDrawBatch.sampler = null;
             curDrawBatch.useLocalData = null;
+            if (!depthStencil) { depthStencil = null; }
+            curDrawBatch.fillPasses(mat, depthStencil, null);
             curDrawBatch.hDescriptorSet = SubModelPool.get(subModel.handle, SubModelView.DESCRIPTOR_SET);
             curDrawBatch.hInputAssembler = SubModelPool.get(subModel.handle, SubModelView.INPUT_ASSEMBLER);
 
@@ -531,9 +536,6 @@ export class UI {
             this._currSampler = null;
             this._currTextureHash = 0;
             this._currSamplerHash = 0;
-            this._currMaterialHash = 0;
-            this._currMaterialUniformHash = 0;
-
             this._batches.push(curDrawBatch);
         }
     }
@@ -563,29 +565,29 @@ export class UI {
         const buffer = this.currBufferBatch;
         const uiCanvas = this._currCanvas;
         const hIA = buffer?.recordBatch();
-        let mat = this._currMaterial;
+        const mat = this._currMaterial;
         if (!hIA || !mat) {
             return;
         }
+
+        let blendState;
+        let depthStencil;
         if (renderComp) {
-            if (StencilManager.sharedManager!.handleMaterial(mat, renderComp)) {
-                this._currMaterial = mat = renderComp.material!;
-                const state = StencilManager.sharedManager!.pattern;
-                StencilManager.sharedManager!.applyStencil(mat, state);
-            }
-            renderComp.updateMaterialUniformHash(mat);
+            blendState = renderComp.blendHash === -1 ? null : renderComp.getBlendState();
+            depthStencil = StencilManager.sharedManager!.getStencilStage(renderComp.stencilStage);
         }
 
         const curDrawBatch = this._currStaticRoot ? this._currStaticRoot._requireDrawBatch() : this._drawBatchPool.alloc();
         curDrawBatch.camera = uiCanvas && uiCanvas.camera;
         curDrawBatch.bufferBatch = buffer;
-        curDrawBatch.material = mat;
+        // curDrawBatch.material = mat;
         curDrawBatch.texture = this._currTexture!;
         curDrawBatch.sampler = this._currSampler;
         curDrawBatch.hInputAssembler = hIA;
         curDrawBatch.useLocalData = this._currTransform;
         curDrawBatch.textureHash = this._currTextureHash;
         curDrawBatch.samplerHash = this._currSamplerHash;
+        curDrawBatch.fillPasses(mat, depthStencil, blendState);
 
         this._batches.push(curDrawBatch);
 
@@ -641,8 +643,6 @@ export class UI {
         this._currTransform = null;
         this._currTextureHash = 0;
         this._currSamplerHash = 0;
-        this._currMaterialHash = 0;
-        this._currMaterialUniformHash = 0;
     }
 
     /**
@@ -763,8 +763,7 @@ export class UI {
     private _initDescriptorSet (batch: UIDrawBatch) {
         const root = legacyCC.director.root;
 
-        const programName = EffectAsset.get('sprite')!.shaders[0].name;
-        _dsInfo.layout = programLib.getDescriptorSetLayout(root.device, programName, true);
+        _dsInfo.layout = batch.passes[0].localSetLayout;
         batch.hDescriptorSet = DSPool.alloc(root.device, _dsInfo);
     }
 

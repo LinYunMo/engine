@@ -33,6 +33,7 @@ import { UI } from '../../renderer/ui/ui';
 import { Component } from '../component';
 import { UITransform } from './ui-transform';
 import { Node } from '../../scene-graph';
+import { Stage } from '../../renderer/ui/stencil-manager';
 
 /**
  * @en Legacy UI base class for rendering component, please use [[UIRenderable]] instead.
@@ -47,7 +48,6 @@ import { Node } from '../../scene-graph';
 @disallowMultiple
 @executeInEditMode
 export class UIComponent extends Component {
-
     protected _lastParent: Node | null = null;
 
     public __preload () {
@@ -78,7 +78,6 @@ export class UIComponent extends Component {
     public updateAssembler (render: UI) {
     }
 
-
     /**
      * @en Post render data submission procedure, it's executed after assembler updated for all children.
      * It may assemble some extra render data to the geometry buffers, or it may only change some render states.
@@ -89,4 +88,7 @@ export class UIComponent extends Component {
      */
     public postUpdateAssembler (render: UI) {
     }
+
+    public stencilStage : Stage = Stage.DISABLED;
+    public _stencilStageInModel : Stage = Stage.DISABLED;
 }

@@ -629,17 +629,17 @@ export class Mask extends UIRenderable {
     }
 
     protected _attachClearModel () {
-        if (this._clearModel) {
-            const renderScene = director.root!.ui.renderScene;
-            renderScene.addModel(this._clearModel);
-        }
+        // if (this._clearModel) {
+        //     const renderScene = director.root!.ui.renderScene;
+        //     //renderScene.addModel(this._clearModel);
+        // }
     }
 
     protected _detachClearModel () {
-        if (this._clearModel) {
-            const renderScene = director.root!.ui.renderScene;
-            renderScene.removeModel(this._clearModel);
-        }
+        // if (this._clearModel) {
+        //     // const renderScene = director.root!.ui.renderScene;
+        //     // renderScene.removeModel(this._clearModel);
+        // }
     }
 }
 

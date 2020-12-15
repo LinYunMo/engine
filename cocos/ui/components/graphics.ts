@@ -683,21 +683,21 @@ export class Graphics extends UIRenderable {
     }
 
     protected _attachToScene () {
-        const renderScene = director.root!.ui.renderScene;
-        if (!this.model || this.model.scene === renderScene) {
-            return;
-        }
+        // const renderScene = director.root!.ui.renderScene;
+        // if (!this.model || this.model.scene === renderScene) {
+        //     return;
+        // }
 
-        if (this.model.scene !== null) {
-            this._detachFromScene();
-        }
-        renderScene.addModel(this.model);
+        // if (this.model.scene !== null) {
+        //     this._detachFromScene();
+        // }
+        // renderScene.addModel(this.model);
     }
 
     protected _detachFromScene () {
-        if (this.model && this.model.scene) {
-            this.model.scene.removeModel(this.model);
-            this.model.scene = null;
-        }
+        // if (this.model && this.model.scene) {
+        //     this.model.scene.removeModel(this.model);
+        //     this.model.scene = null;
+        // }
     }
 }
