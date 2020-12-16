@@ -180,8 +180,8 @@ export class UIDrawBatch {
                 }
                 const mtlPass = passes[i];
                 const passInUse = this._passes[i];
-                if (dss === null) { dss = mtlPass.depthStencilState; }
-                if (bs === null) { bs = mtlPass.blendState; }
+                if (!dss) { dss = mtlPass.depthStencilState; }
+                if (!bs) { bs = mtlPass.blendState; }
 
                 mtlPass.update();
                 // @ts-expect-error hack for UI use pass object
