@@ -41,11 +41,10 @@ import { Layers, Node } from '../../scene-graph';
 import { MeshBuffer } from './mesh-buffer';
 import { StencilManager } from './stencil-manager';
 import { UIDrawBatch } from './ui-draw-batch';
-import { UIMaterial } from './ui-material';
 import * as UIVertexFormat from './ui-vertex-format';
 import { legacyCC } from '../../global-exports';
 import { DescriptorSetHandle, DSPool, SubModelPool, SubModelView } from '../core/memory-pools';
-import { ModelLocalBindings, UBOLocal } from '../../pipeline/define';
+import { ModelLocalBindings } from '../../pipeline/define';
 import { RenderTexture, SpriteFrame } from '../../assets';
 import { TextureBase } from '../../assets/texture-base';
 import { sys } from '../../platform/sys';
@@ -102,8 +101,6 @@ export class UI {
     private _scene: RenderScene;
     private _meshBuffers: Map<number, MeshBuffer[]> = new Map();
     private _meshBufferUseCount: Map<number, number> = new Map();
-    private _uiMaterials: Map<number, UIMaterial> = new Map<number, UIMaterial>();
-    private _canvasMaterials: Map<number, Map<number, number>> = new Map<number, Map<number, number>>();
     private _batches: CachedArray<UIDrawBatch>;
     private _doUploadBuffersCall: Map<any, Function> = new Map();
     private _emptyMaterial = new Material();
@@ -169,24 +166,6 @@ export class UI {
         return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), 'renderScene')!.get!.bind(this);
     }
 
-    public _getUIMaterial (mat: Material): UIMaterial {
-        if (this._uiMaterials.has(mat.hash)) {
-            return this._uiMaterials.get(mat.hash)!;
-        }
-        const uiMat = new UIMaterial();
-        uiMat.initialize({ material: mat });
-        this._uiMaterials.set(mat.hash, uiMat);
-        return uiMat;
-    }
-
-    public _removeUIMaterial (hash: number) {
-        if (this._uiMaterials.has(hash)) {
-            if (this._uiMaterials.get(hash)!.decrease() === 0) {
-                this._uiMaterials.delete(hash);
-            }
-        }
-    }
-
     /**
      * @en
      * Add the managed Canvas.
@@ -198,34 +177,12 @@ export class UI {
      */
     public addScreen (comp: Canvas) {
         const screens = this._screens;
-        // clear the canvas old visibility cache in canvasMaterial list
-        for (let i = 0; i < screens.length; i++) {
-            const screen = screens[i];
-            if (screen.camera) {
-                const visibility = screen.camera.visibility;
-                const matRecord = this._canvasMaterials.get(visibility);
-                if (matRecord) {
-                    const matHashInter = matRecord.keys();
-                    let matHash = matHashInter.next();
-                    while (!matHash.done) {
-                        this._removeUIMaterial(matHash.value);
-                        matHash = matHashInter.next();
-                    }
-
-                    matRecord.clear();
-                }
-            }
-        }
-
         this._screens.push(comp);
         this._screens.sort(this._screenSort);
         for (let i = 0; i < screens.length; i++) {
             const element = screens[i];
             if (element.camera) {
                 element.camera.visibility = Layers.BitMask.UI_2D | (i + 1);
-                if (!this._canvasMaterials.has(element.camera.visibility)) {
-                    this._canvasMaterials.set(element.camera.visibility, new Map<number, number>());
-                }
             }
         }
     }
@@ -266,30 +223,11 @@ export class UI {
         }
 
         this._screens.splice(idx, 1);
-        if (comp.camera) {
-            const matRecord = this._canvasMaterials.get(comp.camera.visibility);
-            const matHashInter = matRecord!.keys();
-            let matHash = matHashInter.next();
-            while (!matHash.done) {
-                this._removeUIMaterial(matHash.value);
-                matHash = matHashInter.next();
-            }
-
-            matRecord!.clear();
-        }
-
         let camera: Camera | null;
         for (let i = idx; i < this._screens.length; i++) {
             camera = this._screens[i].camera;
             if (camera) {
-                const matRecord = this._canvasMaterials.get(camera.visibility)!;
                 camera.visibility = Layers.BitMask.UI_2D | (i + 1);
-                const newMatRecord = this._canvasMaterials.get(camera.visibility)!;
-                matRecord.forEach((value: number, key: number) => {
-                    newMatRecord.set(key, value);
-                });
-
-                matRecord.clear();
             }
         }
     }
@@ -360,10 +298,6 @@ export class UI {
                 if (batch.camera) {
                     const visibility = batch.camera.visibility;
                     batch.visFlags = visibility;
-                    // TODO: canvas material not finish
-                    // if (this._canvasMaterials.get(visibility)!.get(batch.material!.hash) == null) {
-                    //    this._canvasMaterials.get(visibility)!.set(batch.material!.hash, 1);
-                    // }
                 }
 
                 this._scene.addBatch(batch);
@@ -644,17 +578,6 @@ export class UI {
      */
     public flushMaterial (mat: Material) {
         this._currMaterial = mat;
-    }
-
-    private _destroyUIMaterials () {
-        const matIter = this._uiMaterials.values();
-        let result = matIter.next();
-        while (!result.done) {
-            const uiMat = result.value;
-            uiMat.destroy();
-            result = matIter.next();
-        }
-        this._uiMaterials.clear();
     }
 
     public walk (node: Node, level = 0) {
