@@ -477,6 +477,7 @@ export class UIRenderable extends RenderableComponent {
         }
         if (target.blendDst !== this._dstBlendFactor || target.blendSrc !== this._srcBlendFactor) {
             target.blend = true;
+            target.blendDstAlpha = BlendFactor.ONE_MINUS_SRC_ALPHA;
             target.blendDst = this._dstBlendFactor;
             target.blendSrc = this._srcBlendFactor;
         }
