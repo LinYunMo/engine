@@ -27,11 +27,9 @@
  * @hidden
  */
 
-import { Mask, UIRenderable } from '../../../../exports/ui';
+import { Mask } from '../../../../exports/ui';
 import { ComparisonFunc, StencilOp } from '../../gfx/define';
 import { DepthStencilState } from '../../gfx/pipeline-state';
-import { Pass } from '../core/pass';
-
 // Stage types
 export enum Stage {
     // Stencil disabled
@@ -122,31 +120,6 @@ export class StencilManager {
         this.stage = Stage.DISABLED;
     }
 
-    private _changed (pass: Pass, comp?: UIRenderable) {
-        if (comp) {
-            if (comp.stencilStage === this.stage) {
-                return false;
-            }
-            comp.stencilStage = this.stage;
-            return true;
-        }
-
-        // only ui-model use this code
-        // Notice: Not all state
-        const stencilState = pass.depthStencilState;
-        const pattern = this._stencilPattern;
-        if (pattern.stencilTest !== stencilState.stencilTestFront
-            || pattern.func !== stencilState.stencilFuncFront
-            || pattern.failOp !== stencilState.stencilFailOpFront
-            || pattern.stencilMask !== stencilState.stencilReadMaskFront
-            || pattern.writeMask !== stencilState.stencilWriteMaskFront
-            || pattern.ref !== stencilState.stencilRefFront) {
-            return true;
-        }
-
-        return false;
-    }
-
     private stencilStateMap = new Map<Stage, DepthStencilState>();
 
     public getStencilStage (stage: Stage) {
@@ -179,11 +152,7 @@ export class StencilManager {
         return depthStencilState;
     }
 
-    // 状态切换要考虑一下嵌套
-    // 状态现在包含了 inverted
-    // invert 的处理在状态设置的时候完成
-    // 嵌套和之前一样，依赖于 _maskStack
-    // 子节点的状态也依赖于 this.stage
+    // Notice: Only children node in Mask need use this.stage
     private setStateFromStage (stage) {
         const pattern = this._stencilPattern;
         if (stage === Stage.DISABLED) {

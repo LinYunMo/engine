@@ -280,7 +280,6 @@ export class UIRenderable extends RenderableComponent {
      * @zh 组件模板缓冲状态 (注意：请不要直接修改它的值)
      */
     public stencilStage : Stage = Stage.DISABLED;
-    public _stencilStageInModel : Stage = Stage.DISABLED; // 这个值需要考虑是否用于 pass 更新的 flag
 
     /**
      * @en The blend factor enums
@@ -314,16 +313,6 @@ export class UIRenderable extends RenderableComponent {
     // 特殊渲染节点，给一些不在节点树上的组件做依赖渲染（例如 mask 组件内置两个 graphics 来渲染）
     protected _delegateSrc: Node | null = null;
     protected _instanceMaterialType = InstanceMaterialType.ADD_COLOR_AND_TEXTURE;
-    // protected _blendTemplate = {
-    //     blendState: {
-    //         targets: [
-    //             {
-    //                 blendSrc: BlendFactor.SRC_ALPHA,
-    //                 blendDst: BlendFactor.ONE_MINUS_SRC_ALPHA,
-    //             },
-    //         ],
-    //     },
-    // };
 
     protected _blendState: BlendState = new BlendState();
     protected _blendHash = 0;
@@ -480,7 +469,8 @@ export class UIRenderable extends RenderableComponent {
     }
 
     public _updateBlendFunc () {
-        let target = this._blendState.targets[0];// 只处理了 pass [0] 的 target[0]
+        // todo: Not only Pass[0].target[0]
+        let target = this._blendState.targets[0];
         if (!target) {
             target = new BlendTarget();
             this._blendState.setTarget(0, target);

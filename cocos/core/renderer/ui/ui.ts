@@ -46,8 +46,7 @@ import * as UIVertexFormat from './ui-vertex-format';
 import { legacyCC } from '../../global-exports';
 import { DescriptorSetHandle, DSPool, SubModelPool, SubModelView } from '../core/memory-pools';
 import { ModelLocalBindings, UBOLocal } from '../../pipeline/define';
-import { EffectAsset, RenderTexture, SpriteFrame } from '../../assets';
-import { programLib } from '../core/program-lib';
+import { RenderTexture, SpriteFrame } from '../../assets';
 import { TextureBase } from '../../assets/texture-base';
 import { sys } from '../../platform/sys';
 
@@ -336,15 +335,8 @@ export class UI {
                     for (let j = 0; j < subModels.length; j++) {
                         subModels[j].priority = batchPriority++;
                     }
-                } else if (batch.useLocalData) {
-                    this._initDescriptorSet(batch); // when free
-                    const descriptorSet = DSPool.get(batch.hDescriptorSet);
-                    const binding = ModelLocalBindings.SAMPLER_SPRITE;
-                    descriptorSet.bindTexture(binding, batch.texture!);
-                    descriptorSet.bindSampler(binding, batch.sampler!);
-                    descriptorSet.bindBuffer(UBOLocal.BINDING, batch.localBuffer);
-                    descriptorSet.update();
                 } else {
+                    // TODO: particle 2d not finish
                     const descriptorSetTextureMap = this._descriptorSetCacheMap.get(batch.textureHash);
                     if (descriptorSetTextureMap && descriptorSetTextureMap.has(batch.samplerHash)) {
                         batch.hDescriptorSet = descriptorSetTextureMap.get(batch.samplerHash)!;
@@ -368,7 +360,7 @@ export class UI {
                 if (batch.camera) {
                     const visibility = batch.camera.visibility;
                     batch.visFlags = visibility;
-                    // 这儿缺个功能，canvas 的 renderTexture 功能
+                    // TODO: canvas material not finish
                     // if (this._canvasMaterials.get(visibility)!.get(batch.material!.hash) == null) {
                     //    this._canvasMaterials.get(visibility)!.set(batch.material!.hash, 1);
                     // }
@@ -500,9 +492,8 @@ export class UI {
 
         let depthStencil;
         if (mat) {
+            // Todo: Graphics Node behind Mask need set Stage
             if (comp instanceof UIComponent) {
-                // 没处理 单独的 graphics
-                // 针对 mask 的 model 和 graphics，这里是不需要全局子节点控制的，所以不用更新
                 comp.stencilStage = StencilManager.sharedManager!.stage;
             }
             depthStencil = StencilManager.sharedManager!.getStencilStage(comp.stencilStage);
@@ -580,7 +571,6 @@ export class UI {
         const curDrawBatch = this._currStaticRoot ? this._currStaticRoot._requireDrawBatch() : this._drawBatchPool.alloc();
         curDrawBatch.camera = uiCanvas && uiCanvas.camera;
         curDrawBatch.bufferBatch = buffer;
-        // curDrawBatch.material = mat;
         curDrawBatch.texture = this._currTexture!;
         curDrawBatch.sampler = this._currSampler;
         curDrawBatch.hInputAssembler = hIA;

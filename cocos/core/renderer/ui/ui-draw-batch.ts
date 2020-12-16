@@ -37,9 +37,8 @@ import { Model } from '../scene/model';
 import { UI } from './ui';
 import { NULL_HANDLE, UIBatchHandle, UIBatchPool, UIBatchView, PassPool, PassView } from '../core/memory-pools';
 import { Layers } from '../../scene-graph/layers';
-import { IPassInfoFull, Pass } from '../core/pass';
+import { Pass } from '../core/pass';
 import { legacyCC } from '../../global-exports';
-import { cclegacy } from '../../../../exports/base';
 import { UBOLocal } from '../../pipeline/define';
 
 const UI_VIS_FLAG = Layers.Enum.NONE | Layers.Enum.UI_3D;
@@ -59,24 +58,6 @@ export class UIDrawBatch {
     }
     public set hDescriptorSet (handle) {
         UIBatchPool.set(this._handle, UIBatchView.DESCRIPTOR_SET, handle);
-    }
-    public get material () {
-        return this._material;
-    }
-    public set material (mat) {
-        this._material = mat;
-        if (mat) {
-            const passes = mat.passes;
-            if (!passes) { return; }
-
-            UIBatchPool.set(this._handle, UIBatchView.PASS_COUNT, passes.length);
-            let passOffset = UIBatchView.PASS_0 as const;
-            let shaderOffset = UIBatchView.SHADER_0 as const;
-            for (let i = 0; i < passes.length; i++, passOffset++, shaderOffset++) {
-                UIBatchPool.set(this._handle, passOffset, passes[i].handle);
-                UIBatchPool.set(this._handle, shaderOffset, passes[i].getShaderVariant());
-            }
-        }
     }
     public get visFlags () {
         return UIBatchPool.get(this._handle, UIBatchView.VIS_FLAGS);
@@ -110,7 +91,6 @@ export class UIDrawBatch {
     public isStatic = false;
     public textureHash = 0;
     public samplerHash = 0;
-    private _material: Material | null = null;
     private _handle: UIBatchHandle = NULL_HANDLE;
     private _passes: Pass[] = [];
 
@@ -133,7 +113,6 @@ export class UIDrawBatch {
     }
 
     public clear () {
-        this._material = null;
         this.bufferBatch = null;
         this.hInputAssembler = NULL_HANDLE;
         this.hDescriptorSet = NULL_HANDLE;
@@ -194,7 +173,7 @@ export class UIDrawBatch {
             let passOffset = UIBatchView.PASS_0 as const;
             let shaderOffset = UIBatchView.SHADER_0 as const;
             for (let i = 0; i < passes.length; i++, passOffset++, shaderOffset++) {
-                if (!this._passes[i]) { // 有个问题是每帧都会删除
+                if (!this._passes[i]) {
                     this._passes[i] = new Pass(legacyCC.director.root);
                     // @ts-expect-error hack for UI use pass object
                     this._passes[i]._handle = PassPool.alloc();
@@ -209,10 +188,6 @@ export class UIDrawBatch {
                 passInUse._initPassFromTarget(mtlPass, dss, bs);
                 UIBatchPool.set(this._handle, passOffset, passInUse.handle);
                 UIBatchPool.set(this._handle, shaderOffset, passInUse.getShaderVariant());
-            }
-            for (let j = 0; j < this._passes.length - passes.length; j++) { // 每帧都是新的，所以根本不用去剔除
-                this._passes[passes.length - 1].destroy();
-                this._passes.pop(); // pass 数量同步，无用剔除
             }
         }
     }

@@ -658,6 +658,7 @@ export class Pass {
         this._blocks = target._blocks;
         this._dynamics =  target._dynamics;
 
+        // Todo: Or getHash?
         this.tryCompile();
     }
 

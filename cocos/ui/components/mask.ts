@@ -628,6 +628,7 @@ export class Mask extends UIRenderable {
         }
     }
 
+    // TODO: useless
     protected _attachClearModel () {
         // if (this._clearModel) {
         //     const renderScene = director.root!.ui.renderScene;
@@ -635,6 +636,7 @@ export class Mask extends UIRenderable {
         // }
     }
 
+    // TODO: useless
     protected _detachClearModel () {
         // if (this._clearModel) {
         //     // const renderScene = director.root!.ui.renderScene;

@@ -682,6 +682,7 @@ export class Graphics extends UIRenderable {
         return !!this.model && this._isDrawing;
     }
 
+    // TODO: useless
     protected _attachToScene () {
         // const renderScene = director.root!.ui.renderScene;
         // if (!this.model || this.model.scene === renderScene) {
@@ -694,6 +695,7 @@ export class Graphics extends UIRenderable {
         // renderScene.addModel(this.model);
     }
 
+    // TODO: useless
     protected _detachFromScene () {
         // if (this.model && this.model.scene) {
         //     this.model.scene.removeModel(this.model);
