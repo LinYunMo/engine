@@ -152,9 +152,6 @@ export class Mask extends UIRenderable {
             }
         } else {
             this._useRenderData();
-            if (!this._spriteFrame) {
-                this._detachClearModel();
-            }
 
             if (this._graphics) {
                 this._graphics.clear();
@@ -236,10 +233,7 @@ export class Mask extends UIRenderable {
         this._spriteFrame = value;
         if (this._type === MaskType.IMAGE_STENCIL) {
             if (!lastSp && value) {
-                this._attachClearModel();
                 this.markForUpdateRenderData();
-            } else if (!value) {
-                this._detachClearModel();
             }
         }
     }
@@ -375,9 +369,6 @@ export class Mask extends UIRenderable {
 
     public onEnable () {
         super.onEnable();
-        if (this._type !== MaskType.IMAGE_STENCIL || this.spriteFrame) {
-            this._attachClearModel();
-        }
 
         if (this._type === MaskType.ELLIPSE || this._type === MaskType.RECT) {
             this._updateGraphics();
@@ -602,10 +593,6 @@ export class Mask extends UIRenderable {
     }
 
     protected _disableGraphics () {
-        if (this._clearModel) {
-            this._detachClearModel();
-        }
-
         if (this._graphics) {
             this._graphics.onDisable();
         }
@@ -626,22 +613,6 @@ export class Mask extends UIRenderable {
                 this.markForUpdateRenderData();
             }
         }
-    }
-
-    // TODO: useless
-    protected _attachClearModel () {
-        // if (this._clearModel) {
-        //     const renderScene = director.root!.ui.renderScene;
-        //     //renderScene.addModel(this._clearModel);
-        // }
-    }
-
-    // TODO: useless
-    protected _detachClearModel () {
-        // if (this._clearModel) {
-        //     // const renderScene = director.root!.ui.renderScene;
-        //     // renderScene.removeModel(this._clearModel);
-        // }
     }
 }
 

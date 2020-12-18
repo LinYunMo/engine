@@ -170,7 +170,7 @@ export class UIRenderable extends RenderableComponent {
     protected updateMaterial () {
         if (this._customMaterial) {
             this.setMaterial(this._customMaterial, 0);
-            this._blendHash = -1; // 一个 flag 来判断合批和取值
+            this._blendHash = -1; // a flag to check merge
             return;
         }
         const mat = this._updateBuiltinMaterial();

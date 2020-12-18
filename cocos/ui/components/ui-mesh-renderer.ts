@@ -72,22 +72,16 @@ export class UIMeshRenderer extends UIComponent {
             return;
         }
 
-        this._modelComponent._sceneGetter = null;// director.root!.ui.getRenderSceneGetter();
+        this._modelComponent._sceneGetter = null;
         this._models = this._modelComponent._collectModels();
     }
 
     public onEnable () {
         super.onEnable();
-        if (this._modelComponent) {
-            // (this._modelComponent as any)._attachToScene();
-        }
     }
 
     public onDisable () {
         super.onDisable();
-        if (this._modelComponent) {
-            // (this._modelComponent as any)._detachFromScene();
-        }
     }
 
     public onDestroy () {
@@ -98,9 +92,6 @@ export class UIMeshRenderer extends UIComponent {
         }
 
         this._modelComponent._sceneGetter = null;
-        if (legacyCC.isValid(this._modelComponent, true)) {
-            // (this._modelComponent as any)._attachToScene();
-        }
         this._models = null;
     }
 

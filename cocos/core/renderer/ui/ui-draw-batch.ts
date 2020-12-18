@@ -39,7 +39,6 @@ import { NULL_HANDLE, UIBatchHandle, UIBatchPool, UIBatchView, PassPool, PassVie
 import { Layers } from '../../scene-graph/layers';
 import { Pass } from '../core/pass';
 import { legacyCC } from '../../global-exports';
-import { UBOLocal } from '../../pipeline/define';
 
 const UI_VIS_FLAG = Layers.Enum.NONE | Layers.Enum.UI_3D;
 
@@ -69,19 +68,6 @@ export class UIDrawBatch {
         return this._passes;
     }
 
-    public get localBuffer () {
-        if (!this.useLocalData) { return null; }
-        if (!this._localBuffer) {
-            this._localBuffer = this._device.createBuffer(new BufferInfo(
-                BufferUsageBit.UNIFORM | BufferUsageBit.TRANSFER_DST,
-                MemoryUsageBit.HOST | MemoryUsageBit.DEVICE,
-                UBOLocal.SIZE,
-                UBOLocal.SIZE,
-            ));
-        }
-        return this._localBuffer;
-    }
-
     public bufferBatch: MeshBuffer | null = null;
     public camera: Camera | null = null;
     public model: Model | null = null;
@@ -94,15 +80,11 @@ export class UIDrawBatch {
     private _handle: UIBatchHandle = NULL_HANDLE;
     private _passes: Pass[] = [];
 
-    private _device: Device;
-    private _localBuffer: Buffer | null = null;
-
     constructor () {
         this._handle = UIBatchPool.alloc();
         UIBatchPool.set(this._handle, UIBatchView.VIS_FLAGS, UI_VIS_FLAG);
         UIBatchPool.set(this._handle, UIBatchView.INPUT_ASSEMBLER, NULL_HANDLE);
         UIBatchPool.set(this._handle, UIBatchView.DESCRIPTOR_SET, NULL_HANDLE);
-        this._device = legacyCC.director.root.device;
     }
 
     public destroy (ui: UI) {
@@ -188,19 +170,6 @@ export class UIDrawBatch {
                 passInUse._initPassFromTarget(mtlPass, dss, bs);
                 UIBatchPool.set(this._handle, passOffset, passInUse.handle);
                 UIBatchPool.set(this._handle, shaderOffset, passInUse.getShaderVariant());
-            }
-        }
-    }
-
-    public bindLocalBuffer () {
-        if (this.useLocalData) {
-            if (!this._localBuffer) {
-                this._localBuffer = this._device.createBuffer(new BufferInfo(
-                    BufferUsageBit.UNIFORM | BufferUsageBit.TRANSFER_DST,
-                    MemoryUsageBit.HOST | MemoryUsageBit.DEVICE,
-                    UBOLocal.SIZE,
-                    UBOLocal.SIZE,
-                ));
             }
         }
     }
