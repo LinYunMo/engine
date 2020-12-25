@@ -63,6 +63,9 @@
                 },
                 "wechatPlugin": {
                     "type": "boolean"
+                },
+                "category": {
+                    "type": "string"
                 }
             },
             "type": "object"
@@ -77,7 +80,13 @@
                 "base": {
                     "$ref": "#/definitions/BaseItem"
                 },
-                "dragonbones": {
+                "3d": {
+                    "$ref": "#/definitions/Item"
+                },
+                "2d": {
+                    "$ref": "#/definitions/Item"
+                },
+                "dragon-bones": {
                     "$ref": "#/definitions/BaseItem"
                 },
                 "gfx-webgl": {
@@ -91,6 +100,12 @@
                 },
                 "intersection-2d": {
                     "$ref": "#/definitions/BaseItem"
+                },
+                "primitive": {
+                    "$ref": "#/definitions/Item"
+                },
+                "profiler": {
+                    "$ref": "#/definitions/Item"
                 },
                 "particle": {
                     "$ref": "#/definitions/BaseItem"
@@ -152,7 +167,13 @@
                 "base": {
                     "$ref": "#/definitions/Item"
                 },
-                "dragonbones": {
+                "3d": {
+                    "$ref": "#/definitions/Item"
+                },
+                "2d": {
+                    "$ref": "#/definitions/Item"
+                },
+                "dragon-bones": {
                     "$ref": "#/definitions/Item"
                 },
                 "gfx-webgl": {
@@ -165,6 +186,12 @@
                     "$ref": "#/definitions/Item"
                 },
                 "intersection-2d": {
+                    "$ref": "#/definitions/Item"
+                },
+                "primitive": {
+                    "$ref": "#/definitions/Item"
+                },
+                "profiler": {
                     "$ref": "#/definitions/Item"
                 },
                 "particle": {

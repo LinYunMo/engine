@@ -1,12 +1,14 @@
 import spine from '../lib/spine-core.js';
-import { IAssembler } from '../../core/renderer/ui/base';
-import { UI } from '../../core/renderer/ui/ui';
+import { IAssembler } from '../../2d/renderer/base';
+import { UI } from '../../2d/renderer/ui';
 import { FrameColor } from '../skeleton-cache';
 import { MaterialInstance } from '../../core/renderer';
 import { SkeletonTexture } from '../skeleton-texture';
-import { vfmtPosUvColor, vfmtPosUvTwoColor } from '../../core/renderer/ui/ui-vertex-format';
+import { vfmtPosUvColor, vfmtPosUvTwoColor } from '../../2d/renderer/ui-vertex-format';
 import { Skeleton, SkeletonMeshData, SpineMaterialType } from '../skeleton';
-import { Color, GFXBlendFactor, Mat4, Material, Node, Texture2D, Vec3 } from '../../core';
+import { Color, Mat4, Material, Node, Texture2D, Vec3 } from '../../core';
+import { BlendFactor } from '../../core/gfx';
+import { legacyCC } from '../../core/global-exports';
 
 const FLAG_BATCH = 0x10;
 const FLAG_TWO_COLOR = 0x01;
@@ -81,25 +83,25 @@ let _currentMaterial: Material | MaterialInstance | null = null;
 let _currentTexture: Texture2D | null = null;
 
 function _getSlotMaterial (blendMode: spine.BlendMode) {
-    let src: GFXBlendFactor;
-    let dst: GFXBlendFactor;
+    let src: BlendFactor;
+    let dst: BlendFactor;
     switch (blendMode) {
     case spine.BlendMode.Additive:
-        src =  _premultipliedAlpha ? GFXBlendFactor.ONE :  GFXBlendFactor.SRC_ALPHA;
-        dst = GFXBlendFactor.ONE;
+        src =  _premultipliedAlpha ? BlendFactor.ONE :  BlendFactor.SRC_ALPHA;
+        dst = BlendFactor.ONE;
         break;
     case spine.BlendMode.Multiply:
-        src = GFXBlendFactor.DST_COLOR;
-        dst = GFXBlendFactor.ONE_MINUS_SRC_ALPHA;
+        src = BlendFactor.DST_COLOR;
+        dst = BlendFactor.ONE_MINUS_SRC_ALPHA;
         break;
     case spine.BlendMode.Screen:
-        src = GFXBlendFactor.ONE;
-        dst = GFXBlendFactor.ONE_MINUS_SRC_COLOR;
+        src = BlendFactor.ONE;
+        dst = BlendFactor.ONE_MINUS_SRC_COLOR;
         break;
     case spine.BlendMode.Normal:
     default:
-        src = _premultipliedAlpha ? GFXBlendFactor.ONE : GFXBlendFactor.SRC_ALPHA;
-        dst = GFXBlendFactor.ONE_MINUS_SRC_ALPHA;
+        src = _premultipliedAlpha ? BlendFactor.ONE : BlendFactor.SRC_ALPHA;
+        dst = BlendFactor.ONE_MINUS_SRC_ALPHA;
         break;
     }
 
@@ -427,8 +429,6 @@ function realTimeTraverse (worldMat?: Mat4) {
     const clipper = _comp!._clipper!;
     let material: Material | MaterialInstance | null = null;
     let attachment: spine.Attachment;
-    let attachmentColor: spine.Color;
-    let slotColor: spine.Color;
     let uvs: spine.ArrayLike<number>;
     let triangles: number[];
     let isRegion: boolean;
@@ -603,10 +603,7 @@ function realTimeTraverse (worldMat?: Mat4) {
             vbuf![v + 4] = uvs[u + 1];       // v
         }
 
-        attachmentColor = meshAttachment.color,
-        slotColor = slot.color;
-
-        fillVertices(skeletonColor, attachmentColor, slotColor, clipper, slot);
+        fillVertices(skeletonColor, meshAttachment.color, slot.color, clipper, slot);
 
         // reset buffer pointer, because clipper maybe realloc a new buffer in file Vertices function.
 
@@ -795,3 +792,5 @@ function cacheTraverse (worldMat?: Mat4) {
         }
     }
 }
+
+legacyCC.internal.SpineAssembler = simple;

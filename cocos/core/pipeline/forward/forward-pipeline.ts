@@ -47,7 +47,7 @@ import { Shadows, ShadowType } from '../../renderer/scene/shadows';
 import { getShadowWorldMatrix, updatePlanarPROJ } from './scene-culling';
 import { Light } from '../../renderer/scene/light';
 import { genSamplerHash, samplerLib } from '../../renderer/core/sampler-lib';
-import { builtinResMgr } from '../../3d/builtin/init';
+import { builtinResMgr } from '../../builtin';
 import { Texture2D } from '../../assets/texture-2d';
 import { Camera } from '../../renderer/scene';
 
@@ -163,11 +163,11 @@ export class ForwardPipeline extends RenderPipeline {
 
     public render (cameras: Camera[]) {
         this._commandBuffers[0].begin();
-        // this.updateGlobalUBO();
-        for (let j = 0; j < this.flows.length; j++) {
+        this.updateGlobalUBO();
+        for (let j = 0; j < this._flows.length; j++) {
             for (let i = 0; i < cameras.length; i++) {
                 const camera = cameras[i];
-                this.flows[j].render(camera);
+                this._flows[j].render(camera);
             }
         }
         this._commandBuffers[0].end();
