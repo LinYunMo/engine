@@ -43,6 +43,7 @@ import visibleRect from '../../core/platform/visible-rect';
 import { RenderRoot2D } from './render-root-2d';
 import { Node } from '../../core';
 import { NodeEventType } from '../../core/scene-graph/node-event';
+import { RenderGroup2D } from './render-group-2d';
 
 const _worldPos = new Vec3();
 
@@ -68,7 +69,7 @@ const RenderMode = Enum({
 @menu('UI/Canvas')
 @executeInEditMode
 @disallowMultiple
-export class Canvas extends RenderRoot2D {
+export class Canvas extends RenderGroup2D {
     /**
      * @en
      * The render mode of Canvas.

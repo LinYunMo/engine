@@ -49,6 +49,7 @@ import { TextureBase } from '../../core/assets/texture-base';
 import { sys } from '../../core/platform/sys';
 import { Mat4 } from '../../core/math';
 import { value } from '../../core/utils/js-typed';
+import { RenderGroup2D } from '../framework/render-group-2d';
 
 const _dsInfo = new DescriptorSetInfo(null!);
 const m4_1 = new Mat4();
@@ -124,7 +125,7 @@ export class Batcher2D {
     }
 
     public device: Device;
-    private _screens: RenderRoot2D[] = [];
+    private _screens: RenderGroup2D[] = [];
     private _bufferBatchPool: RecyclePool<MeshBuffer> = new RecyclePool(() => new MeshBuffer(this), 128);
     private _drawBatchPool: Pool<DrawBatch2D>;
     private _meshBuffers: Map<number, MeshBuffer[]> = new Map();
@@ -197,7 +198,7 @@ export class Batcher2D {
      *
      * @param comp - 屏幕组件。
      */
-    public addScreen (comp: RenderRoot2D) {
+    public addScreen (comp: RenderGroup2D) {
         this._screens.push(comp);
         this._screens.sort(this._screenSort);
     }
@@ -249,7 +250,7 @@ export class Batcher2D {
             if (!screen.enabledInHierarchy) {
                 continue;
             }
-            this._recursiveScreenNode(screen.node);
+            
         }
 
         let batchPriority = 0;
@@ -670,7 +671,7 @@ export class Batcher2D {
         }
     }
 
-    private _screenSort (a: RenderRoot2D, b: RenderRoot2D) {
+    private _screenSort (a: RenderGroup2D, b: RenderGroup2D) {
         return a.node.getSiblingIndex() - b.node.getSiblingIndex();
     }
 

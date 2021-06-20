@@ -102,6 +102,13 @@ export class Asset extends Eventify(CCObject) {
 
     private _file: any = null;
     private _ref = 0;
+    private _id = 0;
+
+    private static _maxId = 1;
+
+    public get id () {
+        return this._id;
+    } 
 
     /**
      * @en
@@ -165,6 +172,7 @@ export class Asset extends Eventify(CCObject) {
                 writable: true,
             });
         }
+        this._id = Asset._maxId++;
     }
 
     /**
